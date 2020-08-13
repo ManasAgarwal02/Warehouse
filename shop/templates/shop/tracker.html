@@ -1,0 +1,118 @@
+{% extends 'shop/basic.html' %}
+
+{% block title %} Track your order {% endblock %}
+
+{% block css %}
+    <style>
+
+
+    </style>
+{% endblock %}
+
+
+
+{% block body %}
+    <div class="container">
+        <div class='col my-4'>
+            <h2 class="text-center">Type info to track your order.</h2>
+        </div>
+        <form method="post" action="#" id="trackerForm">  {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="inputEmail4">Order Id</label>
+                    <input type="text" class="form-control" id="orderId" name="orderId" required>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="inputPassword4">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Track Order</button>
+            </div>
+        </form>
+
+        <div class='col my-4'>
+            <h2>Your order status is ...</h2>
+            <div class="my-4">
+                <ul class="list-group" id="items">
+                </ul>
+            </div>
+        </div>
+        <div class='col my-4'>
+            <h2>Your order details are ...</h2>
+            <div class="my-4">
+                <ul class="list-group" id="citems">
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+
+{% block js %}
+    <script>
+
+        $('#trackerForm').submit(function (event) {
+            $('#items').empty();
+            $('#citems').empty();
+            var formData = {
+                'orderId': $('input[name=orderId]').val(),
+                'email': $('input[name=email]').val(),
+                'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '/shop/tracker/',
+                data: formData,
+                encode: true
+            })
+
+                .done(function (data) {
+                    console.log(data)
+                    data = JSON.parse(data);
+                    {#console.log(data);#}
+                    var updates = data[0];
+                    if (!isEmpty(updates[0])) {
+                        for (i = 0; i < updates.length; i++) {
+                            let text = updates[i]['text'];
+                            let time = updates[i]['time'];
+                            mystr = "<li class='list-group-item d-flex justify-content-between align-items-center'>" +
+                                text + " " +
+                                "<span class='badge badge-primary badge-pill'>" + "Date: " + time + "</span>\n" +
+                                " </li>"
+                            $('#items').append(mystr);
+                        }
+                        cart = JSON.parse(data[1]);
+                        for (var item in cart) {
+                            let qty = cart[item][0];
+                            let itemName = cart[item][1];
+                            mystr = "<li class='list-group-item d-flex justify-content-between align-items-center'>" +
+                                itemName +
+                                "<span class='badge badge-primary badge-pill'>Quantity: " + qty + "</span>\n" +
+                                " </li>"
+                            $('#citems').append(mystr);
+                        }
+                    } else {
+                        mystr = "<li class='list-group-item d-flex justify-content-between align-items-center'>" +
+                            "Sorry, You have typed the wrong info." +
+                            "</li>"
+                        $('#items').append(mystr);
+                    }
+
+
+                });
+            event.preventDefault();
+
+        });
+
+        function isEmpty(obj) {
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key))
+                    return false;
+            }
+            return true;
+        }
+
+    </script>
+{% endblock %}
